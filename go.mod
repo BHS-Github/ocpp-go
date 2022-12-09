@@ -18,4 +18,4 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.30.0
 )
 
-replace github.com/lorenzodonini/ocpp-go => github.com/BHS-Github/ocpp-go NewMod
+replace github.com/lorenzodonini/ocpp-go => github.com/BHS-Github/ocpp-go v0.0.0-20221208201307-1f0045205ccf
