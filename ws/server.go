@@ -455,6 +455,7 @@ out:
 				websocket.FormatCloseMessage(websocket.ClosePolicyViolation, "a connection with this ID has reconnected"),
 				time.Now().Add(s.timeoutConfig.WriteWait))
 			_ = currentConn.connection.Close()
+			currentConn.closeSilently <- true
 		}
 	default:
 		// There is already a connection with the same ID. Close the new one immediately with a PolicyViolation.
