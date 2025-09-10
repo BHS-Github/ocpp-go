@@ -232,6 +232,7 @@ type webSocket struct {
 	pingC              chan []byte
 	closeC             chan websocket.CloseError // used to gracefully close a websocket connection.
 	forceCloseC        chan error                // used by the readPump to notify a forcefully closed connection to the writePump.
+	closeSilently      chan bool                 // used to skip cleanup on websocket closure
 	tlsConnectionState *tls.ConnectionState
 	cfg                WebSocketConfig
 	log                logging.Logger
@@ -253,6 +254,7 @@ func newWebSocket(id string, conn *websocket.Conn, tlsState *tls.ConnectionState
 		pingC:              make(chan []byte, 1),
 		closeC:             make(chan websocket.CloseError, 1),
 		forceCloseC:        make(chan error, 1),
+		closeSilently:      make(chan bool, 1),
 		onClosed:           onClosed,
 		onError:            onError,
 		onMessage:          onMessage,
@@ -488,6 +490,10 @@ func (w *webSocket) writePump() {
 				return
 			}
 			log.Debugf("written %d bytes to %s", len(msg.data), w.id)
+		case _ = <-w.closeSilently:
+			// webSocket has already been closed at w.conn level, so we proceed without cleanup
+			w.log.Debugf("connection cleanup skipped for %s", w.id)
+			return
 		case closeErr := <-w.closeC:
 			// webSocket is being gracefully closed by user command
 			w.log.Debugf("closing connection for %s: %d - %s", w.id, closeErr.Code, closeErr.Text)
