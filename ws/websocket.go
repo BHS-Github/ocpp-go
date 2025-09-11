@@ -601,6 +601,13 @@ func (server *Server) readPump(ws *WebSocket) {
 				continue
 			}
 		}
+		select {
+		case _ = <-ws.closeSilently:
+			// webSocket has already been closed at w.conn level, so we proceed without cleanup
+			log.Debugf("connection cleanup skipped for %s", ws.id)
+			return
+		default:
+		}
 		_ = conn.SetReadDeadline(server.getReadTimeout())
 	}
 }
