@@ -129,6 +129,7 @@ type WebSocket struct {
 	forceCloseC        chan error                // used by the readPump to notify a forcefully closed connection to the writePump.
 	pingMessage        chan []byte
 	tlsConnectionState *tls.ConnectionState
+	closeSilently      chan bool
 }
 
 // Retrieves the unique Identifier of the websocket (typically, the URL suffix).
@@ -526,6 +527,7 @@ out:
 		forceCloseC:        make(chan error, 1),
 		pingMessage:        make(chan []byte, 1),
 		tlsConnectionState: r.TLS,
+		closeSilently:      make(chan bool, 1),
 	}
 	log.Debugf("upgraded websocket connection for %s from %s", id, conn.RemoteAddr().String())
 	// If unsupported subprotocol, terminate the connection immediately
@@ -539,15 +541,15 @@ out:
 	}
 	// Check whether client exists
 	server.connMutex.Lock()
-	// There is already a connection with the same ID. Close the new one immediately with a PolicyViolation.
-	if _, exists := server.connections[id]; exists {
-		server.connMutex.Unlock()
-		server.error(fmt.Errorf("client %s already exists, closing duplicate client", id))
-		_ = conn.WriteControl(websocket.CloseMessage,
-			websocket.FormatCloseMessage(websocket.ClosePolicyViolation, "a connection with this ID already exists"),
+	// There is already a connection with the same ID. Close the old one, and allow the new connection. This has security
+	// implications, see the note on the SetDuplicateConnectionBehavior func.
+	if currentConn, exists := server.connections[id]; exists {
+		server.error(fmt.Errorf("client %s already exists, closing existing client", id))
+		_ = currentConn.connection.WriteControl(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.ClosePolicyViolation, "a connection with this ID has reconnected"),
 			time.Now().Add(server.timeoutConfig.WriteWait))
-		_ = conn.Close()
-		return
+		_ = currentConn.connection.Close()
+		currentConn.closeSilently <- true
 	}
 	// Add new client
 	server.connections[ws.id] = &ws
@@ -647,6 +649,10 @@ func (server *Server) writePump(ws *WebSocket) {
 			}
 			// Invoking cleanup
 			server.cleanupConnection(ws)
+			return
+		case _ = <-ws.closeSilently:
+			// webSocket has already been closed at w.conn level, so we proceed without cleanup
+			log.Debugf("connection cleanup skipped for %s", ws.id)
 			return
 		case closed, ok := <-ws.forceCloseC:
 			if !ok || closed != nil {
