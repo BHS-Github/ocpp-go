@@ -1,8 +1,7 @@
 package ocppj_test
 
 import (
-	"sync"
-
+	"github.com/sasha-s/go-deadlock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -105,7 +104,7 @@ func (suite *ClientStateTestSuite) TestClearPendingRequests() {
 
 type ServerStateTestSuite struct {
 	suite.Suite
-	mutex sync.RWMutex
+	mutex deadlock.RWMutex
 	state ocppj.ServerState
 }
 

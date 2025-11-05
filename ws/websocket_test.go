@@ -18,10 +18,10 @@ import (
 	"os"
 	"path"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
+	"github.com/sasha-s/go-deadlock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/suite"
@@ -661,7 +661,7 @@ func (s *WebSocketSuite) TestWebsocketServerStopAllConnections() {
 	time.Sleep(100 * time.Millisecond)
 	// Connect clients
 	clients := []Client{}
-	wg := sync.WaitGroup{}
+	wg := deadlock.WaitGroup{}
 	host := fmt.Sprintf("localhost:%v", serverPort)
 	for i := 0; i < numClients; i++ {
 		wsClient := newWebsocketClient(s.T(), func(data []byte) ([]byte, error) {

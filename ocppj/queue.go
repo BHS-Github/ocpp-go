@@ -2,7 +2,8 @@ package ocppj
 
 import (
 	"fmt"
-	"sync"
+
+	"github.com/sasha-s/go-deadlock"
 )
 
 // RequestBundle is a convenience struct for passing a call object struct and the
@@ -38,7 +39,7 @@ type RequestQueue interface {
 type FIFOClientQueue struct {
 	elements []interface{}
 	capacity int
-	mutex    sync.RWMutex
+	mutex    deadlock.RWMutex
 }
 
 func (q *FIFOClientQueue) Init() {
@@ -135,7 +136,7 @@ type ServerQueueMap interface {
 type FIFOQueueMap struct {
 	data          map[string]RequestQueue
 	queueCapacity int
-	mutex         sync.RWMutex
+	mutex         deadlock.RWMutex
 }
 
 func (f *FIFOQueueMap) Init() {

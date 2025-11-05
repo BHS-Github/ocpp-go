@@ -8,11 +8,11 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
-	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/lorenzodonini/ocpp-go/logging"
+	"github.com/sasha-s/go-deadlock"
 )
 
 const (
@@ -226,7 +226,7 @@ type message struct {
 // Don't use a websocket directly, but refer to Server and Client.
 type webSocket struct {
 	connection         *websocket.Conn
-	mutex              sync.RWMutex
+	mutex              deadlock.RWMutex
 	id                 string
 	outQueue           chan message
 	pingC              chan []byte
@@ -248,7 +248,7 @@ func newWebSocket(id string, conn *websocket.Conn, tlsState *tls.ConnectionState
 	w := &webSocket{
 		id:                 id,
 		connection:         conn,
-		mutex:              sync.RWMutex{},
+		mutex:              deadlock.RWMutex{},
 		tlsConnectionState: tlsState,
 		outQueue:           make(chan message, 2),
 		pingC:              make(chan []byte, 1),

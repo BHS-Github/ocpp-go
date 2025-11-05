@@ -3,11 +3,11 @@ package ocppj
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp"
 	"github.com/lorenzodonini/ocpp-go/ws"
+	"github.com/sasha-s/go-deadlock"
 )
 
 // ClientDispatcher contains the state and logic for handling outgoing messages on a client endpoint.
@@ -91,7 +91,7 @@ type DefaultClientDispatcher struct {
 	readyForDispatch    chan bool
 	pendingRequestState ClientState
 	network             ws.Client
-	mutex               sync.RWMutex
+	mutex               deadlock.RWMutex
 	onRequestCancel     func(requestID string, request ocpp.Request, err *ocpp.Error)
 	timer               *time.Timer
 	paused              bool
@@ -372,7 +372,7 @@ type DefaultServerDispatcher struct {
 	stoppedC            chan struct{}
 	onRequestCancel     CanceledRequestHandler
 	network             ws.Server
-	mutex               sync.RWMutex
+	mutex               deadlock.RWMutex
 }
 
 // Handler function to be invoked when a request gets canceled (either due to timeout or to other external factors).

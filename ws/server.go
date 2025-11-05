@@ -8,11 +8,11 @@ import (
 	"net"
 	"net/http"
 	"path"
-	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/sasha-s/go-deadlock"
 )
 
 // ---------------------- SERVER ----------------------
@@ -158,7 +158,7 @@ type server struct {
 	timeoutConfig               ServerTimeoutConfig
 	upgrader                    websocket.Upgrader
 	errC                        chan error
-	connMutex                   sync.RWMutex
+	connMutex                   deadlock.RWMutex
 	addr                        *net.TCPAddr
 	httpHandler                 *mux.Router
 }
