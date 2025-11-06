@@ -1,13 +1,12 @@
 package callbackqueue
 
 import (
-	"sync"
-
 	"github.com/lorenzodonini/ocpp-go/ocpp"
+	"github.com/sasha-s/go-deadlock"
 )
 
 type CallbackQueue struct {
-	callbacksMutex sync.RWMutex
+	callbacksMutex deadlock.RWMutex
 	callbacks      map[string][]func(confirmation ocpp.Response, err error)
 }
 

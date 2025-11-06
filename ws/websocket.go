@@ -15,12 +15,12 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/lorenzodonini/ocpp-go/logging"
+	"github.com/sasha-s/go-deadlock"
 )
 
 const (
@@ -271,7 +271,7 @@ type Server struct {
 	timeoutConfig       ServerTimeoutConfig
 	upgrader            websocket.Upgrader
 	errC                chan error
-	connMutex           sync.RWMutex
+	connMutex           deadlock.RWMutex
 	addr                *net.TCPAddr
 	httpHandler         *mux.Router
 }
@@ -790,7 +790,7 @@ type Client struct {
 	connected      bool
 	onDisconnected func(err error)
 	onReconnected  func()
-	mutex          sync.Mutex
+	mutex          deadlock.Mutex
 	errC           chan error
 	reconnectC     chan struct{} // used for signaling, that a reconnection attempt should be interrupted
 }

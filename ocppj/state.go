@@ -1,9 +1,8 @@
 package ocppj
 
 import (
-	"sync"
-
 	"github.com/lorenzodonini/ocpp-go/ocpp"
+	"github.com/sasha-s/go-deadlock"
 )
 
 // Contains the pending request state for messages, associated to a single client-server channel.
@@ -37,7 +36,7 @@ type ClientState interface {
 type clientState struct {
 	requestID      string
 	pendingRequest pendingRequest
-	mutex          sync.RWMutex
+	mutex          deadlock.RWMutex
 }
 
 // Creates a simple struct implementing ClientState, to be used by client/server dispatchers.
@@ -129,13 +128,13 @@ type ServerState interface {
 // See NewServerState for more info.
 type serverState struct {
 	pendingRequestState map[string]ClientState
-	mutex               *sync.RWMutex
+	mutex               *deadlock.RWMutex
 }
 
 // Creates a simple struct implementing ServerState, to be used by server dispatchers.
 //
 // If no mutex is passed, then atomic access to the data struct is not guaranteed, and race conditions may arise.
-func NewServerState(m *sync.RWMutex) ServerState {
+func NewServerState(m *deadlock.RWMutex) ServerState {
 	return &serverState{
 		pendingRequestState: map[string]ClientState{},
 		mutex:               m,

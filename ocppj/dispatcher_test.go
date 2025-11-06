@@ -2,9 +2,9 @@ package ocppj_test
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
+	"github.com/sasha-s/go-deadlock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ import (
 
 type ServerDispatcherTestSuite struct {
 	suite.Suite
-	mutex           sync.RWMutex
+	mutex           deadlock.RWMutex
 	state           ocppj.ServerState
 	websocketServer MockWebsocketServer
 	endpoint        ocppj.Server

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"sync"
 	"time"
 
+	"github.com/sasha-s/go-deadlock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -646,7 +646,7 @@ func (suite *OcppJTestSuite) TestParallelRequests() {
 // Both CallResult and CallError messages are returned to test all message types.
 func (suite *OcppJTestSuite) TestServerRequestFlow() {
 	t := suite.T()
-	var mutex sync.Mutex
+	var mutex deadlock.Mutex
 	messagesToQueue := 10
 	processedMessages := 0
 	mockChargePoint1 := "cp1"
@@ -670,7 +670,7 @@ func (suite *OcppJTestSuite) TestServerRequestFlow() {
 		sendResponseTrigger <- triggerData{clientID: wsID, call: call}
 	}).Return(nil)
 	// Mocked response generator
-	var wg sync.WaitGroup
+	var wg deadlock.WaitGroup
 	wg.Add(messagesToQueue * 2)
 	go func() {
 		for {
